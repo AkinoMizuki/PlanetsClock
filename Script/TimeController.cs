@@ -200,8 +200,8 @@ public partial class TimeController : MonoBehaviour
 
         if(month <= 2)
         {
-            year = year - 1;
-            month = month + 12;
+            year -= 1;
+            month += 12;
         }
 
         double julian_day = Math.Floor(365.25 * (year + 4716)) + Math.Floor(30.6001 * (month + 1)) + day - 1524.5;
@@ -587,15 +587,10 @@ public partial class TimeController : MonoBehaviour
 
         //経度
         float SubLongitude = Mathf.Pow(Mathf.Abs(ISS_Pos.x), 2) + Mathf.Pow(Mathf.Abs(ISS_Pos.y), 2) + Mathf.Pow(Mathf.Abs(ISS_Pos.z), 2);
-        Longitude = Mathf.Asin(ISS_Pos.z / Mathf.Sqrt(SubLongitude)) * Mathf.Deg2Rad;
+        Longitude = (float)rot2Dir(Mathf.Asin(ISS_Pos.z / Mathf.Sqrt(SubLongitude)));
 
         //-緯度
-        Latitude = Mathf.Atan2(ISS_Pos.y, ISS_Pos.x) * Mathf.Deg2Rad;
-
-
-        //Debug.Log(Latitude);
-        //Debug.Log(Longitude);
-        //Debug.Log("");
+        Latitude = (float)rot2Dir(Mathf.Atan2(ISS_Pos.y, ISS_Pos.x));
 
         Pos.E = (double)Latitude;
         Pos.N = (double)Longitude;

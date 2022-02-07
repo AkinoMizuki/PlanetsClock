@@ -67,6 +67,9 @@ public class main : MonoBehaviour
     void Start()
     {/* スタート関数 */
 
+        //幅、高さ、フルスクリーン無効(window表示)、リフレッシュレート
+        //Screen.SetResolution(200, 400, false, 60);
+
         h_Angle = 0;  //時針
         m_Angle = 0;  //分
         s_Angle = 0;  //秒
@@ -147,25 +150,25 @@ public class main : MonoBehaviour
         //1日毎に人工衛星位置更新
 
         //ISS(ZARYA)
-        //1 25544U 98067A   22037.48730771  .00006537  00000 + 0  12329 - 3 0  9991
-        //2 25544  51.6415 263.8482 0006642 103.3178 318.7604 15.49790898324916
+        //1 25544U 98067A   22038.37836806  .00007168  00000 + 0  13432 - 3 0  9993
+        //2 25544  51.6416 259.4336 0006553 105.8037 251.0375 15.49806680325044
 
         //元期(ET)
-        ISS_orbitalElements.EpochTime = 22037.48730771;
+        ISS_orbitalElements.EpochTime = 22038.37836806;
         //近地点引数(ω)
-        ISS_orbitalElements.Argument = 103.3178;
+        ISS_orbitalElements.Argument = 105.8037;
         //軌道傾斜角(i)
-        ISS_orbitalElements.InclinationAngle = 51.6415;
+        ISS_orbitalElements.InclinationAngle = 51.6416;
         //昇交点赤経(Ω)
-        ISS_orbitalElements.AscendingNode = 263.8482;
+        ISS_orbitalElements.AscendingNode = 259.4336;
         //離心率(e)
-        ISS_orbitalElements.Eccentricity = 0.0006642;
+        ISS_orbitalElements.Eccentricity = 0.0006553;
         //平均近点角(M0)
-        ISS_orbitalElements.MeanAnomaly = 318.7604;
+        ISS_orbitalElements.MeanAnomaly = 251.0375;
         //平均運動(M1)
-        ISS_orbitalElements.MeanMotion = 15.49790898;
+        ISS_orbitalElements.MeanMotion = 15.49806680;
         //平均運動変化係数(M2)
-        ISS_orbitalElements.MeanCoefficient = 0.00006537;
+        ISS_orbitalElements.MeanCoefficient = 0.00007168;
 
 
         //緯度経度変換がNG
@@ -236,11 +239,37 @@ public class main : MonoBehaviour
 
         double h_gsh = Math.Truncate(GST);
         double m_gsh = Math.Truncate((GST - h_gsh) * 60);
-        double s_gsh = ((GST - h_gsh) * 60 * 60) - (m_gsh * 60 );
+        double s_gsh = ((GST - h_gsh) * 60 * 60) - (m_gsh * 60);
 
         //0.00の切り捨て処理
         MoonAge = Math.Floor(MoonAge * 100) / 100;
 
+        //方位
+        string NorS = "N";
+        string EorW = "E";
+
+        if (ISS_direction.N <= 0)
+        {
+            NorS = "S";
+        }
+        if (ISS_direction.E <= 0)
+        {
+            EorW = "W";
+        }
+
+        //NorS ISS緯度変換
+        ISS_direction.N = Math.Abs(ISS_direction.N);
+        double h_NorS = Math.Truncate(ISS_direction.N);
+        double m_NorS = Math.Truncate((ISS_direction.N - h_NorS) * 60);
+        double s_NorS = ((ISS_direction.N - h_NorS) * 60 * 60) - (m_NorS * 60);
+
+        //EorW ISS緯度変換
+        ISS_direction.E = Math.Abs(ISS_direction.E);
+        double h_EorW = Math.Truncate(ISS_direction.E);
+        double m_EorW = Math.Truncate((ISS_direction.E - h_EorW) * 60);
+        double s_EorW = ((ISS_direction.E - h_EorW) * 60 * 60) - (m_EorW * 60);
+
+        //ISS高度0.000で切り捨て
         ISS_orbit.Altitude = Math.Floor(ISS_orbit.Altitude * 1000) / 1000;
 
         //テキスト更新
@@ -253,8 +282,8 @@ public class main : MonoBehaviour
             " JD  "+ JD +"<br>" +
             " MJD " + MJD + "<br><br>" +
             "■ISS(ZARYA)<br>" +
-            " N "+ ISS_direction.N  + "<br>" +
-            " E " + ISS_direction.E + "<br>" +
+            " " + NorS + " " + h_NorS.ToString("000") + "˚" + m_NorS.ToString("00") + "'" + s_NorS.ToString("00") + "\"<br>" + 
+            " " + EorW + " " + h_EorW.ToString("000") + "˚" + m_EorW.ToString("00") + "'" + s_EorW.ToString("00") + "\"<br>" +
             " Alt " + ISS_orbit.Altitude.ToString("00.000") + "<br><br>" +
             "■Moon<br> " +
             MoonAge.ToString("00.00");

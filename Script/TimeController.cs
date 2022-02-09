@@ -1,4 +1,13 @@
-﻿using System;
+﻿///<summary>
+///
+/// TimeController
+/// rev：
+/// 
+/// ver.0.0.0.0
+/// 2022/02/08
+/// 
+/// </summary>
+using System;
 using UnityEngine;
 
 public partial class TimeController : MonoBehaviour
@@ -567,6 +576,11 @@ public partial class TimeController : MonoBehaviour
         double ETJD = GetJD(date);
         double SetJD = GetJD(SetTime);
 
+        //Debug.Log("SetTime");
+        //Debug.Log(SetTime.Year + "/" + SetTime.Month + "/" + SetTime.Day + " " + SetTime.Hour + ":" + SetTime.Minute + ":" + SetTime.Second);
+        //Debug.Log("date");
+        //Debug.Log(date.Year + "/" + date.Month + "/" + date.Day + " " + date.Hour + ":" + date.Minute + ":" + date.Second);
+
         //経過JD
         DeltaEpochTime = SetJD - ETJD;
         
@@ -777,7 +791,7 @@ public partial class TimeController : MonoBehaviour
         //係数GM(km3 / day2)
         double GM = 2.975537 * Mathf.Pow(10, 15);
         //軌道長半径(km)
-        double a = Mathf.Pow((float)(GM / ((4 * Mathf.Pow(Mathf.PI, 2)) * Mathf.Pow((float)Mm,2))), ((float)1 / 3));
+        double a = Mathf.Pow((float)((float)GM / ((4 * Mathf.Pow(Mathf.PI, 2)) * Mathf.Pow((float)Mm,2))), ((float)1 / 3));
         /* 離心近点角E(rev) */
         double M = (MeanAnomaly / 360) + (MeanMotion * DeltaEpochTime);
         M = M + (MeanCoefficient / 2) * (Mathf.Pow((float)DeltaEpochTime, 2));

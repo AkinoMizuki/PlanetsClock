@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static TimeController;
 using TMPro;
+using UnityEngine.UI;
 
 public class main : MonoBehaviour
 {/* mainクラス */
@@ -11,7 +12,11 @@ public class main : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI TmpUGUI;
 
-    public Transform TimeController; //時間取得関数
+    //関数オブジェクト呼び込み
+    public Transform TimeController;    //時間取得関数
+    public Transform GetSatellite;      //人工衛星データ関数
+
+    public GameObject DomeProjector;    //ドームカメラ
 
     public GameObject Hour_Transform;      //時針
     public GameObject Minutes_Transform;   //分
@@ -21,6 +26,8 @@ public class main : MonoBehaviour
     public GameObject EquatorialGridLine_Transform; //赤道軸
     public GameObject EclipticGridLine_Transform; //黄道軸
     public GameObject GalaxyGridLine_Transform; //銀河軸
+
+    public GameObject AllSky_Transform;         //恒星
 
     public GameObject Moon_Blender_Transform; //月影
 
@@ -63,12 +70,43 @@ public class main : MonoBehaviour
     //月齢代入値
     private double Moon_value = (double)0;
 
+
+    //ISS(ZARYA)
+    //1 25544U 98067A   22038.37836806  .00007168  00000 + 0  13432 - 3 0  9993
+    //2 25544  51.6416 259.4336 0006553 105.8037 251.0375 15.49806680325044
+    /* ISS仮初期値 */
+    //元期(ET)
+    private double EpochTime = 22038.37836806;
+    //近地点引数(ω)
+    private double Argument = 105.8037;
+    //軌道傾斜角(i)
+    private double InclinationAngle = 51.6416;
+    //昇交点赤経(Ω)
+    private double AscendingNode = 259.4336;
+    //離心率(e)
+    private double Eccentricity = 0.0006553;
+    //平均近点角(M0)
+    private double MeanAnomaly = 251.0375;
+    //平均運動(M1)
+    private double MeanMotion = 15.49806680;
+    //平均運動変化係数(M2)
+    private double MeanCoefficient = 0.00007168;
+
+
+
+
+
     // Start is called before the first frame update
     void Start()
     {/* スタート関数 */
 
         //幅、高さ、フルスクリーン無効(window表示)、リフレッシュレート
         //Screen.SetResolution(200, 400, false, 60);
+
+        //ドームカメラ
+        DomeProjector = GameObject.Find("Dome Projector");
+        //ドームカメラ回転
+        DomeProjector.transform.transform.localRotation = Quaternion.Euler(0, 180, 0);
 
         h_Angle = 0;  //時針
         m_Angle = 0;  //分
@@ -84,6 +122,7 @@ public class main : MonoBehaviour
         EquatorialGridLine_Transform = GameObject.Find("EquatorialGridLine");   //赤道軸
         EclipticGridLine_Transform = GameObject.Find("EclipticGridLine");       //黄道軸
         GalaxyGridLine_Transform = GameObject.Find("GalaxyGridLine");           //銀河軸
+        AllSky_Transform = GameObject.Find("AllSky_Obj");                       //恒星
         Moon_Blender_Transform = GameObject.Find("Moon_Blender");               //月影
 
         //時計回転軸の初期化
@@ -93,8 +132,10 @@ public class main : MonoBehaviour
 
         //星の初期化
         EquatorialGridLine_Transform.transform.localRotation = Earth_Rotat;
+        AllSky_Transform.transform.localRotation = Earth_Rotat;
 
         //人工衛星位置取得
+        StartCoroutine(GetSatellite.GetComponent<GetSatellite>().GetWeb_Satellitet());
 
         //テキスト初期化
         TmpUGUI.text = "■Time<br>" +
@@ -148,30 +189,78 @@ public class main : MonoBehaviour
         GST = TimeController.GetComponent<TimeController>().GetGst(Date_time);
 
         //1日毎に人工衛星位置更新
+        //元期(ET)
+        ISS_orbitalElements.EpochTime = EpochTime;
+        //近地点引数(ω)
+        ISS_orbitalElements.Argument = Argument;
+        //軌道傾斜角(i)
+        ISS_orbitalElements.InclinationAngle = InclinationAngle;
+        //昇交点赤経(Ω)
+        ISS_orbitalElements.AscendingNode = AscendingNode;
+        //離心率(e)
+        ISS_orbitalElements.Eccentricity = Eccentricity;
+        //平均近点角(M0)
+        ISS_orbitalElements.MeanAnomaly = MeanAnomaly;
+        //平均運動(M1)
+        ISS_orbitalElements.MeanMotion = MeanMotion;
+        //平均運動変化係数(M2)
+        ISS_orbitalElements.MeanCoefficient = MeanCoefficient;
+
 
         //ISS(ZARYA)
         //1 25544U 98067A   22038.37836806  .00007168  00000 + 0  13432 - 3 0  9993
         //2 25544  51.6416 259.4336 0006553 105.8037 251.0375 15.49806680325044
+        /*人工衛星配列データを要求*/
+        string[,,] Stations = GetSatellite.GetComponent<GetSatellite>().SendStations();
+        
+        if (Stations[0, 0, 0] != null)
+        {/*=== 軌道データnull確認 ===*/
 
-        //元期(ET)
-        ISS_orbitalElements.EpochTime = 22038.37836806;
-        //近地点引数(ω)
-        ISS_orbitalElements.Argument = 105.8037;
-        //軌道傾斜角(i)
-        ISS_orbitalElements.InclinationAngle = 51.6416;
-        //昇交点赤経(Ω)
-        ISS_orbitalElements.AscendingNode = 259.4336;
-        //離心率(e)
-        ISS_orbitalElements.Eccentricity = 0.0006553;
-        //平均近点角(M0)
-        ISS_orbitalElements.MeanAnomaly = 251.0375;
-        //平均運動(M1)
-        ISS_orbitalElements.MeanMotion = 15.49806680;
-        //平均運動変化係数(M2)
-        ISS_orbitalElements.MeanCoefficient = 0.00007168;
+            if (Stations[0, 0, 0] != "StationsData")
+            {/*=== ISS(ZARYA) ===*/
 
+                try
+                {
+                    //元期(ET)
+                    ISS_orbitalElements.EpochTime = double.Parse(Stations[0, 1, 3]);
+                    //近地点引数(ω)
+                    ISS_orbitalElements.Argument = double.Parse(Stations[0, 2, 5]);
+                    //軌道傾斜角(i)
+                    ISS_orbitalElements.InclinationAngle = double.Parse(Stations[0, 1, 3]);
+                    //昇交点赤経(Ω)
+                    ISS_orbitalElements.AscendingNode = double.Parse(Stations[0, 2, 3]);
+                    //離心率(e)
+                    ISS_orbitalElements.Eccentricity = double.Parse("0." + Stations[0, 2, 4]);
+                    //平均近点角(M0)
+                    ISS_orbitalElements.MeanAnomaly = double.Parse(Stations[0, 2, 6]);
+                    //平均運動(M1)
+                    ISS_orbitalElements.MeanMotion = double.Parse(Stations[0, 2, 7].Substring(0, 10));
+                    //平均運動変化係数(M2)
+                    ISS_orbitalElements.MeanCoefficient = double.Parse("0" + Stations[0, 1, 4]);
+                }
+                catch 
+                {
+                    //元期(ET)
+                    ISS_orbitalElements.EpochTime = EpochTime;
+                    //近地点引数(ω)
+                    ISS_orbitalElements.Argument = Argument;
+                    //軌道傾斜角(i)
+                    ISS_orbitalElements.InclinationAngle = InclinationAngle;
+                    //昇交点赤経(Ω)
+                    ISS_orbitalElements.AscendingNode = AscendingNode;
+                    //離心率(e)
+                    ISS_orbitalElements.Eccentricity = Eccentricity;
+                    //平均近点角(M0)
+                    ISS_orbitalElements.MeanAnomaly = MeanAnomaly;
+                    //平均運動(M1)
+                    ISS_orbitalElements.MeanMotion = MeanMotion;
+                    //平均運動変化係数(M2)
+                    ISS_orbitalElements.MeanCoefficient = MeanCoefficient;
+                }
 
-        //緯度経度変換がNG
+            }/*=== END_ISS(ZARYA) ===*/
+
+        }/*=== END_軌道データnull確認 ===*/
 
         //ISS位置取得
         ISS_orbit = TimeController.GetComponent<TimeController>().GetOrbit(ISS_orbitalElements, Date_time);
@@ -197,19 +286,19 @@ public class main : MonoBehaviour
 
         //歳差角度計算
         Precession_value = Precession * ((float)utc_time.Year - Precession_constant);
-
         //赤道グリッド
         Quaternion Rotat_EquatorialGridLine = Earth_Rotat * Nagoya_Rotat * Nagoya_Rotat_2 * Quaternion.Euler(0, Time_Rotat, 0);
         //黄道グリッド
         Quaternion Rotat_EclipticGridLine = Rotat_EquatorialGridLine * Quaternion.Euler(0, 0, EarthRotat) * Quaternion.Euler(0, -(float)Precession_value, 0);
         //銀河グリッド
-        Quaternion Rotat_GalaxyGridLine = (Rotat_EclipticGridLine * Quaternion.Euler(0, 0, -EarthRotat)) * Quaternion.Euler((float)-62.6, 0, 0) * Quaternion.Euler(0, -123, 0);
-
+        Quaternion Rotat_GalaxyGridLine =  Rotat_EclipticGridLine * Quaternion.Euler((float)62.6, 0, 0) * Quaternion.Euler(0, 123, 0);
+        //恒星
+        Quaternion Rotat_AllSky = Rotat_EclipticGridLine * Quaternion.Euler(0, 0, -EarthRotat);
 
         EquatorialGridLine_Transform.transform.localRotation = Rotat_EquatorialGridLine;    //赤道軸
-        EclipticGridLine_Transform.transform.localRotation = Rotat_EclipticGridLine;      //黄道軸
-        GalaxyGridLine_Transform.transform.localRotation = Rotat_GalaxyGridLine;        //銀河軸
-
+        EclipticGridLine_Transform.transform.localRotation = Rotat_EclipticGridLine;        //黄道軸
+        GalaxyGridLine_Transform.transform.localRotation = Rotat_GalaxyGridLine;            //銀河軸
+        AllSky_Transform.transform.localRotation = Rotat_AllSky;                            //恒星
 
         //EquatorialGridLine_Transform.transform.localRotation = Earth_Rotat * Nagoya_Rotat * Quaternion.Euler(0, -Time_Rotat, 0);
 
@@ -272,6 +361,9 @@ public class main : MonoBehaviour
         //ISS高度0.000で切り捨て
         ISS_orbit.Altitude = Math.Floor(ISS_orbit.Altitude * 1000) / 1000;
 
+        //FPS計算
+        float fps = 1f / Time.deltaTime;
+
         //テキスト更新
         TmpUGUI.text = "■Time<br> " +
             utc_time.Year.ToString("0000") + "/" + utc_time.Month.ToString("00") + "/" + utc_time.Day.ToString("00") + "/" +
@@ -286,7 +378,8 @@ public class main : MonoBehaviour
             " " + EorW + " " + h_EorW.ToString("000") + "˚" + m_EorW.ToString("00") + "'" + s_EorW.ToString("00") + "\"<br>" +
             " Alt " + ISS_orbit.Altitude.ToString("00.000") + "<br><br>" +
             "■Moon<br> " +
-            MoonAge.ToString("00.00");
+            MoonAge.ToString("00.00") +
+            "         FPS " + fps.ToString("000.000");
 
     }/* END_テキスト更新 */
 

@@ -5,12 +5,19 @@ using UnityEngine;
 using static TimeController;
 using TMPro;
 using UnityEngine.UI;
+using System.Threading.Tasks;
 
 public class main : MonoBehaviour
 {/* mainクラス */
 
     [SerializeField]
     private TextMeshProUGUI TmpUGUI;
+
+    /*=== アップデートチェック ===*/
+    UpdateChecker.CheckProgram UpdateSequence = new UpdateChecker.CheckProgram();
+
+    /*=== メインexeのディレクトリー取得用 ===*/
+    public static string PlanetsClock_ExePass = "";
 
     //関数オブジェクト呼び込み
     public Transform TimeController;    //時間取得関数
@@ -30,6 +37,9 @@ public class main : MonoBehaviour
     public GameObject AllSky_Transform;         //恒星
 
     public GameObject Moon_Blender_Transform; //月影
+
+    /*=== アップデートウィンドウ ===*/
+    public GameObject Update_Transform;         //アップデートウィンドウ
 
     //ローカル変数
     //針
@@ -93,12 +103,14 @@ public class main : MonoBehaviour
     private double MeanCoefficient = 0.00007168;
 
 
-
-
-
     // Start is called before the first frame update
     void Start()
     {/* スタート関数 */
+
+        /*=== メインexeのディレクトリー取得 ===*/
+        PlanetsClock_ExePass = Environment.CurrentDirectory;
+        /*=== アップデート確認 ===*/
+        UploadCheck(PlanetsClock_ExePass);
 
         //幅、高さ、フルスクリーン無効(window表示)、リフレッシュレート
         //Screen.SetResolution(200, 400, false, 60);
@@ -382,5 +394,30 @@ public class main : MonoBehaviour
             "         FPS " + fps.ToString("000.000");
 
     }/* END_テキスト更新 */
+
+
+    /*********************************************************************
+    *   アップデートチェック
+    *********************************************************************/
+    public void UploadCheck(string UpExe)
+    {/*=== アップデートチェック ===*/
+
+        bool UpResult = false;
+        var version = Application.version;
+
+        /* ==== 別スレット ==== */
+        var UpResultTask = Task.Run(() =>
+        {
+            UpResult = UpdateSequence.UpdateCheck(UpExe, version);
+        });/* ==== END_別スレット ==== */
+
+        UpResultTask.Wait();
+
+        //アクティブ変更
+        Update_Transform.SetActive(UpResult);
+
+    }/*=== END_アップデートチェック ===*/
+
+
 
 }/* END_mainクラス */

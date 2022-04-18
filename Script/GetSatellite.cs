@@ -1,10 +1,10 @@
 ﻿///<summary>
 ///
 /// GetSatellite
-/// rev：
+/// rev：Unity in Android
 /// 
 /// ver.0.0.0.0
-/// 2022/02/08
+/// 2022/02/16
 /// 
 /// </summary>
 using System;
@@ -23,6 +23,11 @@ public partial class GetSatellite : MonoBehaviour
 
     public IEnumerator GetWeb_Satellitet()
     {/*=== 人工衛星データ取得 ===*/
+
+
+#if UNITY_ANDROID
+        var stationsData_Folde = Application.persistentDataPath + "/StationsData";
+#endif
 
         //web接続確認
         UnityWebRequest www_Google = UnityWebRequest.Get("https://www.google.com");
@@ -50,9 +55,12 @@ public partial class GetSatellite : MonoBehaviour
             else
             {
 
+#if UNITY_STANDALONE_WIN
                 /*=== データフォルダー作成 ===*/
                 var stationsData_Folde = "./StationsData";
+#endif
 
+                /*=== データフォルダー作成 ===*/
                 if (!Directory.Exists(stationsData_Folde))
                 {/*=== stationsData_Foldeのフォルダー作成 ===*/
                     Directory.CreateDirectory(stationsData_Folde);
@@ -66,11 +74,11 @@ public partial class GetSatellite : MonoBehaviour
                     Directory.CreateDirectory(stationsData_Folde);
                 }/*=== END_stationsData_Foldeのフォルダーの再作成 ===*/
 
-
+                
                 // 結果をテキストとして表示します
                 Debug.Log(www_Orbit.downloadHandler.text);
                 string txt = www_Orbit.downloadHandler.text;
-                StreamWriter sw = new StreamWriter("./StationsData/stations.txt", false);// TextData.txtというファイルを新規で用意
+                StreamWriter sw = new StreamWriter(stationsData_Folde + "/stations.txt", false);// TextData.txtというファイルを新規で用意
                 sw.WriteLine(txt);// ファイルに書き出したあと改行
                 sw.Flush();// StreamWriterのバッファに書き出し残しがないか確認
                 sw.Close();// ファイルを閉じる
@@ -131,9 +139,16 @@ public partial class GetSatellite : MonoBehaviour
         //Index_Stations[0,2,7] = "15.49806680325044";
         //Index_Stations[0,2,8] = null;
 
+#if UNITY_ANDROID
+        /*=== データフォルダー確認 ===*/
+        var stationsData_Folde = Application.persistentDataPath + "/StationsData";
+#endif
 
+#if UNITY_STANDALONE_WIN
         /*=== データフォルダー確認 ===*/
         var stationsData_Folde = "./StationsData";
+#endif
+
 
         if (Directory.Exists(stationsData_Folde))
         {/*=== データフォルダー ===*/

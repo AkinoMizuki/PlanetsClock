@@ -4,7 +4,7 @@
 /// rev：
 /// 
 /// ver.0.0.0.0
-/// 2022/02/08
+/// 2022/04/18
 /// 
 /// </summary>
 using System;
@@ -166,13 +166,14 @@ public partial class TimeController : MonoBehaviour
     {
         //[度数をラジアンに変換]
         //ラジアン = 度数 * Math.PI / 180
-        return (float)(angle / 180 * Math.PI);
+        //return (float)(angle / 180d * Mathf.PI);
+        return (float)(angle * Math.PI / 180f);
     }
     public static double rot2Dir(float radian)
     {
         //[ラジアンを度数に変換]
         //度数 = ラジアン * 180 / Math.PI
-        return (double)(radian * 180 / Math.PI);
+        return (double)(radian * 180d / Math.PI);
     }
 
 
@@ -195,7 +196,7 @@ public partial class TimeController : MonoBehaviour
 
     public double DeltaT()
     {/*=== Terrestrial Time ===*/
-        return (37 + 32);
+        return (37f + 32f);
     }/*=== Terrestrial Time ===*/
 
 
@@ -205,25 +206,25 @@ public partial class TimeController : MonoBehaviour
         double year = date.Year;
         double month = date.Month;
         double day = date.Day;
-        double time_in_day = date.Hour / 24 + date.Minute / 1440 + date.Second / 86400;
+        double time_in_day = date.Hour / 24f + date.Minute / 1440f + date.Second / 86400f;
 
         if(month <= 2)
         {
-            year -= 1;
-            month += 12;
+            year -= 1f;
+            month += 12f;
         }
 
-        double julian_day = Math.Floor(365.25 * (year + 4716)) + Math.Floor(30.6001 * (month + 1)) + day - 1524.5;
+        double julian_day = Math.Floor(365.25f * (year + 4716f)) + Math.Floor(30.6001f * (month + 1)) + day - 1524.5f;
         double transition_offset = 0;
 
-        if (julian_day < 2299160.5)
+        if (julian_day < 2299160.5f)
         {
             transition_offset = 0;
         }
         else
         {
-            double tmp = Math.Floor(year / 100);
-            transition_offset = 2 - tmp + Math.Floor(tmp / 4);
+            double tmp = Math.Floor(year / 100f);
+            transition_offset = 2f - tmp + Math.Floor(tmp / 4f);
         }
 
         return julian_day + transition_offset + time_in_day;
@@ -233,7 +234,7 @@ public partial class TimeController : MonoBehaviour
     public double GetMJD(double JD)
     {/*=== 修正ユリウス日 ===*/
 
-        return JD - 2400000.5;
+        return JD - 2400000.5f;
 
     }/*=== END_修正ユリウス日取得 ===*/
 
@@ -523,68 +524,77 @@ public partial class TimeController : MonoBehaviour
         //元期からの経過日数
         double DeltaEpochTime = 0;
         //西暦年
-        double E_year = Math.Floor(EpochTime / 1000);
+        double E_year = Math.Floor(EpochTime / 1000f);
         //経過日数
-        double E_day = EpochTime - Math.Floor(E_year * 1000);
+        double E_day = EpochTime - Math.Floor(E_year * 1000f);
 
         if (57 <= E_year && E_year <= 99)
         {/* 1957年から1999年まで */
 
-            E_year += 1900;
+            E_year += 1900f;
 
         }
         else /* 2000年以降 */
         {
-            E_year += 2000;
+            E_year += 2000f;
         }
 
-        // 構造体型のインスタンス化
-        Date E_date; //過去時間
-        Date date; //経過時間用
+        double Eset_year = E_year - 1;
+        string E_Time = Eset_year + "/12/31 00:00:00";
+        DateTime E_OutTime = DateTime.Parse(E_Time);
+        E_OutTime = E_OutTime.AddSeconds(E_day * 24 * 60 * 60);
+        DateTime E_SetTime = DateTime.Parse(SetTime.Year + "/" + SetTime.Month + "/" + SetTime.Day + " " + SetTime.Hour + ":" + SetTime.Minute + ":" + SetTime.Second);
 
-        /* 1年を取得 */
-        //年取得
-        E_date.Year = E_year;
-        //月取得
-        E_date.Month = 1;
-        //日取得
-        E_date.Day = 1;
-        //時間取得
-        E_date.Hour = 0;
-        //分取得
-        E_date.Minute = 0;
-        //秒取得
-        E_date.Second = 0;
+        TimeSpan Span_EpochTime = E_SetTime - E_OutTime;
+        DeltaEpochTime = Span_EpochTime.TotalDays;
 
-        //経過日数
-        MotionTime date_Time = DiurnalMotion(E_date, E_day - 1);
+        //// 構造体型のインスタンス化
+        //Date E_date; //過去時間
+        //Date date; //経過時間用
+        //
+        ///* 1年を取得 */
+        ////年取得
+        //E_date.Year = E_year;
+        ////月取得
+        //E_date.Month = 1;
+        ////日取得
+        //E_date.Day = 1;
+        ////時間取得
+        //E_date.Hour = 0;
+        ////分取得
+        //E_date.Minute = 0;
+        ////秒取得
+        //E_date.Second = 0;
+        //
+        ////経過日数
+        //MotionTime date_Time = DiurnalMotion(E_date, E_day - 1);
+        //
+        ///*構造体変更*/
+        ////年取得
+        //date.Year = date_Time.Year;
+        ////月取得
+        //date.Month = date_Time.Month;
+        ////日取得
+        //date.Day = date_Time.Day;
+        ////時間取得
+        //date.Hour = date_Time.Hour;
+        ////分取得
+        //date.Minute = date_Time.Minute;
+        ////秒取得
+        //date.Second = date_Time.Second;
+        //
+        //double ETJD = GetJD(date);
+        //double SetJD = GetJD(SetTime);
+        //
+        ////Debug.Log("SetTime");
+        ////Debug.Log(SetTime.Year + "/" + SetTime.Month + "/" + SetTime.Day + " " + SetTime.Hour + ":" + SetTime.Minute + ":" + SetTime.Second);
+        ////Debug.Log("date");
+        ////Debug.Log(date.Year + "/" + date.Month + "/" + date.Day + " " + date.Hour + ":" + date.Minute + ":" + date.Second);
+        //
+        ////経過JD
+        //DeltaEpochTime = SetJD - ETJD;
 
-        /*構造体変更*/
-        //年取得
-        date.Year = date_Time.Year;
-        //月取得
-        date.Month = date_Time.Month;
-        //日取得
-        date.Day = date_Time.Day;
-        //時間取得
-        date.Hour = date_Time.Hour;
-        //分取得
-        date.Minute = date_Time.Minute;
-        //秒取得
-        date.Second = date_Time.Second;
 
-        double ETJD = GetJD(date);
-        double SetJD = GetJD(SetTime);
-
-        //Debug.Log("SetTime");
-        //Debug.Log(SetTime.Year + "/" + SetTime.Month + "/" + SetTime.Day + " " + SetTime.Hour + ":" + SetTime.Minute + ":" + SetTime.Second);
-        //Debug.Log("date");
-        //Debug.Log(date.Year + "/" + date.Month + "/" + date.Day + " " + date.Hour + ":" + date.Minute + ":" + date.Second);
-
-        //経過JD
-        DeltaEpochTime = SetJD - ETJD;
-        
-        
         return DeltaEpochTime;
     
     
@@ -604,7 +614,7 @@ public partial class TimeController : MonoBehaviour
         Longitude = (float)rot2Dir(Mathf.Asin(ISS_Pos.z / Mathf.Sqrt(SubLongitude)));
 
         //-緯度
-        Latitude = (float)rot2Dir(Mathf.Atan2(ISS_Pos.y, ISS_Pos.x));
+        Latitude = (float)rot2Dir(Mathf.Atan2(ISS_Pos.x, ISS_Pos.y));
 
         Pos.E = (double)Latitude;
         Pos.N = (double)Longitude;
@@ -617,36 +627,36 @@ public partial class TimeController : MonoBehaviour
     public double GetGst(Date date)
     {/*=== GetGst ===*/
 
-        double rad = Math.PI / 180;
+        double rad = Math.PI / 180f;
         double hour = date.Hour;
         double min = date.Minute;
         double sec = date.Second;
 
-        double time_in_sec = hour * 3600 + min * 60 + sec;
-        double time_in_day = hour / 24 + min / 1440 + sec / 86400;
+        double time_in_sec = hour * 3600f + min * 60f + sec;
+        double time_in_day = hour / 24f + min / 1440f + sec / 86400f;
         double jd = GetJD(date);
         double jd0 = jd - time_in_day;
 
         //Greenwich Mean Sidereal Time(GMST) at 0:00
-        double t = (jd0 - 2451545.0) / 36525;
-        double gmst_at_zero = (24110.5484 + 8640184.812866 * t + 0.093104 * t * t + 0.0000062 * t * t * t) / 3600;
-        if (gmst_at_zero > 24)
+        double t = (jd0 - 2451545.0f) / 36525f;
+        double gmst_at_zero = (24110.5484f + 8640184.812866f * t + 0.093104f * t * t + 0.0000062f * t * t * t) / 3600f;
+        if (gmst_at_zero > 24f)
         {
-            gmst_at_zero %= 24;
+            gmst_at_zero %= 24f;
         }
 
         //GMST at target time
-        double gmst = gmst_at_zero + (time_in_sec * 1.00273790925) / 3600;
+        double gmst = gmst_at_zero + (time_in_sec * 1.00273790925f) / 3600f;
         //mean obliquity of the ecliptic
-        double e = 23 + 26.0 / 60 + 21.448 / 3600 - 46.8150 / 3600 * t - 0.00059 / 3600 * t * t + 0.001813 / 3600 * t * t * t;
+        double e = 23f + 26.0f / 60f + 21.448f / 3600f - 46.8150f / 3600f * t - 0.00059f / 3600f * t * t + 0.001813f / 3600f * t * t * t;
         //Nutation in longitude
-        double omega = 125.04452 - 1934.136261 * t + 0.0020708 * t * t + t * t * t / 450000;
-        double long1 = 280.4665 + 36000.7698 * t;
-        double long2 = 218.3165 + 481267.8813 * t;
-        double phai = -17.20 * Math.Sin(omega * rad) - (-1.32 * Math.Sin(2 * long1 * rad)) - 0.23 * Math.Sin(2 * long2 * rad) + 0.21 * Math.Sin(2 * omega * rad);
+        double omega = 125.04452f - 1934.136261f * t + 0.0020708f * t * t + t * t * t / 450000f;
+        double long1 = 280.4665f + 36000.7698f * t;
+        double long2 = 218.3165f + 481267.8813f * t;
+        double phai = -17.20f * Math.Sin(omega * rad) - (-1.32f * Math.Sin(2f * long1 * rad)) - 0.23 * Math.Sin(2f * long2 * rad) + 0.21 * Math.Sin(2f * omega * rad);
         //Greenwich Apparent Sidereal Time(GAST / GST)
-        double gast = gmst + ((phai / 15) * (Math.Cos(e * rad))) / 3600;
-        gast = RoundNum(gast, 24);
+        double gast = gmst + ((phai / 15f) * (Math.Cos(e * rad))) / 3600f;
+        gast = RoundNum(gast, 24f);
 
         return gast;
 
@@ -659,33 +669,33 @@ public partial class TimeController : MonoBehaviour
         // 構造体型のインスタンス化
         Date date;
 
-        double mjd = jd - 2400000.5;
+        double mjd = jd - 2400000.5f;
         double mjd0 = Math.Floor(mjd);
         double flac = mjd - mjd0;
-        double n = mjd0 + 678881;
-        double a = 4 * n + 3 + 4 * Math.Floor(((double)3 / 4) * Math.Floor(((4 * (n + 1)) / (146097)) + 1));
-        double b = 5 * Math.Floor((a % 1461) / 4) + 2;
-        double year = Math.Floor(a / 1461);
-        double month = Math.Floor(b / 153) + 3;
-        double day = Math.Floor((b % 153) / 5) + 1;
+        double n = mjd0 + 678881f;
+        double a = 4 * n + 3 + 4 * Math.Floor(((double)3f / 4f) * Math.Floor(((4f * (n + 1f)) / (146097f)) + 1f));
+        double b = 5 * Math.Floor((a % 1461f) / 4f) + 2f;
+        double year = Math.Floor(a / 1461f);
+        double month = Math.Floor(b / 153f) + 3f;
+        double day = Math.Floor((b % 153f) / 5f) + 1f;
 
-        if (month == 13)
+        if (month == 13f)
         {
             year ++;
-            month = 1;
+            month = 1f;
         }
 
-        if (month == 14)
+        if (month == 14f)
         {
             year++;
-            month = 2;
+            month = 2f;
         }
 
-        double h = flac * 24;
+        double h = flac * 24f;
         double hour = Math.Floor(h);
-        double m = (h - hour) * 60;
+        double m = (h - hour) * 60f;
         double min = Math.Floor(m);
-        double sec = Math.Floor((m - min) * 60);
+        double sec = Math.Floor((m - min) * 60f);
 
         //年取得
         date.Year = year;
@@ -709,8 +719,8 @@ public partial class TimeController : MonoBehaviour
     public double GetMoonAge(Date date)
     {/*=== 月齢計算 ===*/
 
-        double Moon = 29.53059;
-        double MoonAge = 0.0;
+        double Moon = 29.53059f;
+        double MoonAge = 0.0f;
         double year = date.Year;
         double month = date.Month;
         double day = date.Day;
@@ -719,26 +729,26 @@ public partial class TimeController : MonoBehaviour
         double sec = date.Second;
 
         /*時間を日に変換*/
-        day += hour / 24 + min / 1440 + sec / 86400;
+        day += hour / 24f + min / 1440f + sec / 86400f -1f;
 
         /* 19年毎に式が変わる*/
         if (1943 <= year && year <= 1961)
         {/* 1943 <= year <= 1961 */
-            MoonAge = ((year - 1952) * 11 + month + day) % Moon;
+            MoonAge = ((year - 1952f) * 11 + month + day) % Moon;
         }
         else if (1962 <= year && year <= 1980)
         {/* 1962 <= year <= 1980 */
-            MoonAge = ((year - 1971) * 11 + month + day) % Moon;
+            MoonAge = ((year - 1971f) * 11f + month + day) % Moon;
         }
         else if (1981 <= year && year <= 1999)
         {/* 1981 <= year <= 1999 */
-            MoonAge = ((year - 1990) * 11 + month + day) % Moon;
+            MoonAge = ((year - 1990f) * 11f + month + day) % Moon;
         }
         else if (2000 <= year)
         {/* 2000年以降 */
 
 
-            MoonAge = (((year - 2009) % (double)19) * 11 + month + day) % Moon;
+            MoonAge = (((year - 2009f) % (double)19f) * 11f + month + day) % Moon;
 
             if (month == 1 || month == 2)
             {/* 1月2月補正値 */
@@ -750,7 +760,7 @@ public partial class TimeController : MonoBehaviour
         }
         else
         {/*=== 上記以外 ===*/
-            MoonAge = ((year - 1952) * 11 + month + day) % Moon;
+            MoonAge = ((year - 1952f) * 11f + month + day) % Moon;
         }
 
         return MoonAge;
@@ -760,6 +770,7 @@ public partial class TimeController : MonoBehaviour
 
     public Orbit GetOrbit(OrbitalElements orbital_elements, Date date)
     {
+
         // 構造体型のインスタンス化
         Orbit orbit;
 
@@ -781,60 +792,116 @@ public partial class TimeController : MonoBehaviour
         //平均運動変化係数(M2)
         double MeanCoefficient = orbital_elements.MeanCoefficient;
 
+
+        ////元期(ET)
+        //EpochTime = 22097.02427676;
+        ////近地点引数(ω);
+        //Argument = 356.4183;
+        ////軌道傾斜角(i)
+        //InclinationAngle = 51.6453;
+        ////昇交点赤経(Ω)
+        //AscendingNode = 329.0557;
+        ////離心率(e);
+        //Eccentricity = 0.0004559;
+        ////平均近点角(M0);
+        //MeanAnomaly = 147.1455;
+        ////平均運動(M1)
+        //MeanMotion = 15.49913292;
+        ////平均運動変化係数(M2)
+        //MeanCoefficient = 0.00011708;
+
+
+        ////PDFマスター
+        ////手動変換
+        //date.Year = 2006;
+        //date.Month = 5;
+        //date.Day = 15;
+        //date.Hour = 2;
+        //date.Minute = 0;
+        //date.Second = 0;
+        ////元期(ET)
+        //EpochTime = 06120.72277529;
+        ////近地点引数(ω);
+        //Argument = 14.7699;
+        ////軌道傾斜角(i)
+        //InclinationAngle = 98.2104;
+        ////昇交点赤経(Ω)
+        //AscendingNode = 195.1270;
+        ////離心率(e);
+        //Eccentricity = 0.0001679;
+        ////平均近点角(M0);
+        //MeanAnomaly = 345.3549;
+        ////平均運動(M1)
+        //MeanMotion = 14.59544429;
+        ////平均運動変化係数(M2)
+        //MeanCoefficient = 0.00000232;
+        ////END_PDFマスター
+
+
+
         //元期からの経過日数
         double DeltaEpochTime = OverTime(EpochTime, date);
+        
+        //PDFマスター
+        //DeltaEpochTime = 14.36055804;
 
 
         /* 軌道長半径 */
         //平均運動(rev / day)
         double Mm = MeanMotion + MeanCoefficient * DeltaEpochTime;
         //係数GM(km3 / day2)
-        double GM = 2.975537 * Mathf.Pow(10, 15);
+        double GM = 2.975537d * Math.Pow(10d, 15d);
         //軌道長半径(km)
-        double a = Mathf.Pow((float)((float)GM / ((4 * Mathf.Pow(Mathf.PI, 2)) * Mathf.Pow((float)Mm,2))), ((float)1 / 3));
+        double a = Math.Pow((float)((float)GM / ((4f * Math.Pow(Math.PI, 2f)) * Math.Pow((float)Mm,2f))), ((float)1f / 3f));
+
         /* 離心近点角E(rev) */
-        double M = (MeanAnomaly / 360) + (MeanMotion * DeltaEpochTime);
-        M = M + (MeanCoefficient / 2) * (Mathf.Pow((float)DeltaEpochTime, 2));
+        double M = ((float)MeanAnomaly / 360f) + (MeanMotion * DeltaEpochTime);
+        M = M + ((float)MeanCoefficient / 2f) * (Mathf.Pow((float)DeltaEpochTime, 2f));
 
         //整数切り捨て
         double Sub_M = Math.Floor(M);
         M = M - Sub_M;
-        double E = M * 360;              //少数に360をかける
+        double E = M * 360d;              //少数に360をかける
 
         //地球を中心とする人工衛星の三次元座標計算
-        double U = a * Mathf.Cos((float)E * Mathf.Deg2Rad) - a * Eccentricity;
-        double V = a * Mathf.Sqrt(1 - Mathf.Pow((float)Eccentricity, 2)) * Math.Sin((float)E* Mathf.Deg2Rad);
+        double U = a * Mathf.Cos(dir2Rot(E)) - a * Eccentricity;
+        double V = a * Mathf.Sqrt(1f - Mathf.Pow((float)Eccentricity, 2f)) * Mathf.Sin(dir2Rot(E));
 
         //(ω)
-        double Omega_Zero = 180 * 0.174 * Mathf.Pow((float)((float)2 - 2.5 * Mathf.Sin((float)InclinationAngle * Mathf.Deg2Rad)), 2);
-        double Omega_Fast = Mathf.PI * Mathf.Pow((float)(a / 6371), (float)3.5);
-        double Omega = Argument + (Omega_Zero / Omega_Fast) * DeltaEpochTime;
+        //double Omega_Zero = 180f * 0.174f * Mathf.Pow(2f - 2.5f * Mathf.Sin(dir2Rot(InclinationAngle)), 2f);
+        double Omega_Zero = 180d * 0.174d * (2d - 2.5d * Mathf.Pow(Mathf.Sin(dir2Rot(InclinationAngle)),2f));
+
+        double Omega_Fast = Math.PI * Math.Pow((a / 6378.137), 3.5);
+        double Omega = Argument + ((float)Omega_Zero / Omega_Fast) * DeltaEpochTime;
 
         //(Ω)
-        double Ohm_Zero = 180 * 0.174 * Math.Cos((float)InclinationAngle * Mathf.Deg2Rad);
-        double Ohm = AscendingNode - (Ohm_Zero / Omega_Fast) * DeltaEpochTime;
+        double Ohm_Zero = 180f * 0.174f * Mathf.Cos(dir2Rot(InclinationAngle));
+        double Ohm = AscendingNode - ((float)Ohm_Zero / Omega_Fast) * DeltaEpochTime;
+
         //計算結果用
         double[] xyz_Axle = new double[3];
         xyz_Axle[0] = 0;
         xyz_Axle[1] = 0;
         xyz_Axle[2] = 0;
 
-        double XYZ1 = Mathf.Sin((float)(Omega * Mathf.Deg2Rad)) * U + Mathf.Cos((float)Omega * Mathf.Deg2Rad) * V;
-        double XYZ2 = Mathf.Cos((float)Omega * Mathf.Deg2Rad) * U - Mathf.Sin((float)Omega * Mathf.Deg2Rad) * V;
-        xyz_Axle[0] = Mathf.Cos((float)Ohm * Mathf.Deg2Rad) * XYZ2 - Mathf.Sin((float)Ohm * Mathf.Deg2Rad) * (Mathf.Cos((float)InclinationAngle * Mathf.Deg2Rad) * XYZ1);
-        xyz_Axle[1] = Mathf.Sin((float)Ohm * Mathf.Deg2Rad) * XYZ2 + Mathf.Cos((float)Ohm * Mathf.Deg2Rad) * (Mathf.Cos((float)InclinationAngle * Mathf.Deg2Rad) * XYZ1);
-        xyz_Axle[2] = Mathf.Sin((float)InclinationAngle * Mathf.Deg2Rad) * XYZ1;
+        double XYZ1 = Mathf.Sin(dir2Rot(Omega)) * U + Mathf.Cos(dir2Rot(Omega)) * V;
+        double XYZ2 = Mathf.Cos(dir2Rot(Omega)) * U - Mathf.Sin(dir2Rot(Omega)) * V;
+        xyz_Axle[0] = Mathf.Cos(dir2Rot(Ohm)) * XYZ2 - Mathf.Sin(dir2Rot(Ohm)) * (Mathf.Cos(dir2Rot(InclinationAngle)) * XYZ1);
+        xyz_Axle[1] = Mathf.Sin(dir2Rot(Ohm)) * XYZ2 + Mathf.Cos(dir2Rot(Ohm)) * (Mathf.Cos(dir2Rot(InclinationAngle)) * XYZ1);
+        xyz_Axle[2] = Mathf.Sin(dir2Rot(InclinationAngle)) * XYZ1;
         //x cosΩ(cosωU-sinωV)-sinΩ(cosi(sinωU + cosωV))
         //y sinΩ(cosωU-sinωV)+cosΩ(cosi(sinωU + cosωV))
         //z sini(sinωU+cosωV)
 
         //観測赤径角度
-        double theta_g = ((360 / 24) * GetGst(date));
+        double theta_g = ((360d / 24d) * GetGst(date));
+        //PDFマスター
+        //theta_g = 261.678884;
 
         //計算結果用
         double[] XYZ_Axle = new double[3];
-        XYZ_Axle[0] = xyz_Axle[0] * Mathf.Cos((float)(-theta_g * Mathf.Deg2Rad)) - xyz_Axle[1] * Mathf.Sin((float)(-theta_g * Mathf.Deg2Rad));
-        XYZ_Axle[1] = xyz_Axle[0] * Mathf.Sin((float)(-theta_g * Mathf.Deg2Rad)) + xyz_Axle[1] * Mathf.Cos((float)(-theta_g * Mathf.Deg2Rad));
+        XYZ_Axle[0] = xyz_Axle[0] * Mathf.Cos(dir2Rot(-theta_g)) - xyz_Axle[1] * Mathf.Sin(dir2Rot(-theta_g));
+        XYZ_Axle[1] = xyz_Axle[0] * Mathf.Sin(dir2Rot(-theta_g)) + xyz_Axle[1] * Mathf.Cos(dir2Rot(-theta_g));
         XYZ_Axle[2] = xyz_Axle[2];
 
         //θG = θ0 + 1.002737909∆T
@@ -845,7 +912,7 @@ public partial class TimeController : MonoBehaviour
         //座標出力
         orbit.OrbitVector3 = new Vector3((float)XYZ_Axle[0], (float)XYZ_Axle[1], (float)XYZ_Axle[2]);
         //高度出力
-        orbit.Altitude = a - 6371;
+        orbit.Altitude = a - 6378.137f;
         
         return orbit;
 

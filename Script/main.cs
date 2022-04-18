@@ -13,11 +13,17 @@ public class main : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI TmpUGUI;
 
+    public Camera ProjectionCameraTransform;
+
     /*=== アップデートチェック ===*/
     UpdateChecker.CheckProgram UpdateSequence = new UpdateChecker.CheckProgram();
 
     /*=== メインexeのディレクトリー取得用 ===*/
     public static string PlanetsClock_ExePass = "";
+
+    //位置情報
+    LocationUpdater LocationUpdater = new LocationUpdater();
+
 
     //関数オブジェクト呼び込み
     public Transform TimeController;    //時間取得関数
@@ -25,9 +31,11 @@ public class main : MonoBehaviour
 
     public GameObject DomeProjector;    //ドームカメラ
 
+    public GameObject Clock_obj_Transform; //時計本体
     public GameObject Hour_Transform;      //時針
     public GameObject Minutes_Transform;   //分
     public GameObject Seconds_Transform;   //秒
+    
 
     public GameObject World_GridLine_Transform; //地平軸
     public GameObject EquatorialGridLine_Transform; //赤道軸
@@ -40,6 +48,9 @@ public class main : MonoBehaviour
 
     /*=== アップデートウィンドウ ===*/
     public GameObject Update_Transform;         //アップデートウィンドウ
+
+    //位置情報用
+    private string[] locationInformation = new string[4];
 
     //ローカル変数
     //針
@@ -67,6 +78,7 @@ public class main : MonoBehaviour
     //地球傾き
     private Quaternion Earth_Rotat = Quaternion.Euler((float)23.4, 0, 0);
     //名古屋
+    private double latitude = 35.16509646; 
     private Quaternion Nagoya_Rotat = Quaternion.Euler((float)35.16509646, 0, 0) ;
     private Quaternion Nagoya_Rotat_2 = Quaternion.Euler(0, -(float)136.90010642, 0);
     //歳差(掛ける元)
@@ -86,34 +98,59 @@ public class main : MonoBehaviour
     //2 25544  51.6416 259.4336 0006553 105.8037 251.0375 15.49806680325044
     /* ISS仮初期値 */
     //元期(ET)
-    private double EpochTime = 22038.37836806;
+    private double EpochTime { get; set; }
     //近地点引数(ω)
-    private double Argument = 105.8037;
+    private double Argument { get; set; }
     //軌道傾斜角(i)
-    private double InclinationAngle = 51.6416;
+    private double InclinationAngle { get; set; }
     //昇交点赤経(Ω)
-    private double AscendingNode = 259.4336;
+    private double AscendingNode { get; set; }
     //離心率(e)
-    private double Eccentricity = 0.0006553;
+    private double Eccentricity { get; set; }
     //平均近点角(M0)
-    private double MeanAnomaly = 251.0375;
+    private double MeanAnomaly { get; set; }
     //平均運動(M1)
-    private double MeanMotion = 15.49806680;
+    private double MeanMotion { get; set; }
     //平均運動変化係数(M2)
-    private double MeanCoefficient = 0.00007168;
+    private double MeanCoefficient { get; set; }
+
+    // FPS counter data
+    private const int NumFrameDeltas = 10;
+    private float[] m_frameDeltas = new float[NumFrameDeltas];
+    private int m_curFrameDelta;
 
 
     // Start is called before the first frame update
+    void Awake()
+    {
+        Application.targetFrameRate = 3; //2FPSに設定
+                                         // Start is called before the first frame update
+    }
+
+
     void Start()
     {/* スタート関数 */
 
+#if UNITY_STANDALONE_WIN
         /*=== メインexeのディレクトリー取得 ===*/
         PlanetsClock_ExePass = Environment.CurrentDirectory;
         /*=== アップデート確認 ===*/
         UploadCheck(PlanetsClock_ExePass);
+#endif
 
         //幅、高さ、フルスクリーン無効(window表示)、リフレッシュレート
         //Screen.SetResolution(200, 400, false, 60);
+
+        // 自動スリープを無効にする場合
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
+        Clock_obj_Transform = GameObject.Find("Clock_obj");      //時針
+
+        Vector3 pos = Clock_obj_Transform.transform.position;
+        pos.x = Clock_obj_Transform.transform.position.x;
+        pos.y = ProjectionCameraTransform.pixelHeight * (float)1.5; // 画面4分の1の場所に設置
+        pos.z = Clock_obj_Transform.transform.position.z;
+        Clock_obj_Transform.transform.position = pos;               // 座標を設定
 
         //ドームカメラ
         DomeProjector = GameObject.Find("Dome Projector");
@@ -146,6 +183,24 @@ public class main : MonoBehaviour
         EquatorialGridLine_Transform.transform.localRotation = Earth_Rotat;
         AllSky_Transform.transform.localRotation = Earth_Rotat;
 
+        //元期(ET)
+        EpochTime = 22097.02427676;
+        //近地点引数(ω);
+        Argument = 356.4183;
+        //軌道傾斜角(i)
+        InclinationAngle = 51.6453;
+        //昇交点赤経(Ω)
+        AscendingNode = 329.0557;
+        //離心率(e);
+        Eccentricity = 0.0004559;
+        //平均近点角(M0);
+        MeanAnomaly = 147.1455;
+        //平均運動(M1)
+        MeanMotion = 15.49913292;
+        //平均運動変化係数(M2)
+        MeanCoefficient = 0.00011708;
+
+
         //人工衛星位置取得
         StartCoroutine(GetSatellite.GetComponent<GetSatellite>().GetWeb_Satellitet());
 
@@ -170,6 +225,12 @@ public class main : MonoBehaviour
     void Update()
     {/* アップデート関数 */
 
+        Vector3 pos = Clock_obj_Transform.transform.position;
+        pos.x = Clock_obj_Transform.transform.position.x;
+        pos.y = ProjectionCameraTransform.pixelHeight * (float)1.5; // 画面4分の1の場所に設置
+        pos.z = Clock_obj_Transform.transform.position.z;
+        Clock_obj_Transform.transform.position = pos;               // 座標を設定
+
         /*=== 取得 ===*/
         // 構造体型のインスタンス化
         TimeController.UtcTime utc_time;                    //UTC時間
@@ -191,6 +252,18 @@ public class main : MonoBehaviour
         Date_time.Hour = utc_time.Hour;
         Date_time.Minute = utc_time.Minute;
         Date_time.Second = utc_time.Second;
+
+        if (Date_time.Hour == 0)
+        {/*=== 人工衛星位置取得 ===*/
+            if (Date_time.Minute == 0)
+            {
+                if (Date_time.Second == 0)
+                {
+                    //人工衛星位置取得
+                    StartCoroutine(GetSatellite.GetComponent<GetSatellite>().GetWeb_Satellitet());
+                }
+            }
+        }/*=== END_人工衛星位置取得 ===*/
 
         //ユリウス日取得
         JD = TimeController.GetComponent<TimeController>().GetJD(Date_time);
@@ -217,6 +290,34 @@ public class main : MonoBehaviour
         ISS_orbitalElements.MeanMotion = MeanMotion;
         //平均運動変化係数(M2)
         ISS_orbitalElements.MeanCoefficient = MeanCoefficient;
+
+
+        if (Input.location.isEnabledByUser)
+        {/* === 位置情報取得 ===*/
+            locationInformation = LocationUpdater.GetLocation();
+            
+            //位置情報取得
+            if ("Running" == locationInformation[0])
+            {
+                latitude = double.Parse(locationInformation[1]);
+                Nagoya_Rotat_2 = Quaternion.Euler(0, -float.Parse(locationInformation[2]), 0);
+            }
+
+        }/* === END_位置情報取得 ===*/
+
+        
+        if (latitude >= 0)
+        {/* === 地球座標変換 ===*/
+
+            Nagoya_Rotat = Quaternion.Euler((float)(90 - latitude), 0, 0);
+
+        }
+        else
+        {
+
+            Nagoya_Rotat = Quaternion.Euler((float)(90 + -latitude), 0, 0);
+
+        }/* === END_地球座標変換 ===*/
 
 
         //ISS(ZARYA)
@@ -299,7 +400,7 @@ public class main : MonoBehaviour
         //歳差角度計算
         Precession_value = Precession * ((float)utc_time.Year - Precession_constant);
         //赤道グリッド
-        Quaternion Rotat_EquatorialGridLine = Earth_Rotat * Nagoya_Rotat * Nagoya_Rotat_2 * Quaternion.Euler(0, Time_Rotat, 0);
+        Quaternion Rotat_EquatorialGridLine = Nagoya_Rotat * Nagoya_Rotat_2 * Quaternion.Euler(0, Time_Rotat, 0);
         //黄道グリッド
         Quaternion Rotat_EclipticGridLine = Rotat_EquatorialGridLine * Quaternion.Euler(0, 0, EarthRotat) * Quaternion.Euler(0, -(float)Precession_value, 0);
         //銀河グリッド
@@ -375,6 +476,20 @@ public class main : MonoBehaviour
 
         //FPS計算
         float fps = 1f / Time.deltaTime;
+        // Maintain a running average of the last N frame deltas, for a more stable frame counter.
+        m_frameDeltas[m_curFrameDelta++] = Time.deltaTime;
+        if (m_curFrameDelta >= 10)
+            m_curFrameDelta = 0;
+        float totalFrameDelta = 0.0f;
+        for (int i = 0; i < 10; i++)
+            totalFrameDelta += m_frameDeltas[i];
+        //fps =  Mathf.Round(totalFrameDelta != 0.000f ? (float)NumFrameDeltas / totalFrameDelta : 0);
+        fps = (float)NumFrameDeltas / totalFrameDelta;
+
+        if (locationInformation[0] == "")
+        {
+            locationInformation[0] = "non";
+        }
 
         //テキスト更新
         TmpUGUI.text = "■Time<br> " +
@@ -385,8 +500,8 @@ public class main : MonoBehaviour
             " GST "+ h_gsh.ToString("00") + ":" + m_gsh.ToString("00") + ":" + s_gsh.ToString("00") + "<br>" +
             " JD  "+ JD +"<br>" +
             " MJD " + MJD + "<br><br>" +
-            "■ISS(ZARYA)<br>" +
-            " " + NorS + " " + h_NorS.ToString("000") + "˚" + m_NorS.ToString("00") + "'" + s_NorS.ToString("00") + "\"<br>" + 
+            "■ISS(ZARYA)  ■Gps Status<br>" +
+            " " + NorS + " " + h_NorS.ToString("000") + "˚" + m_NorS.ToString("00") + "'" + s_NorS.ToString("00") + "\"  " + locationInformation[0] + "<br>" + 
             " " + EorW + " " + h_EorW.ToString("000") + "˚" + m_EorW.ToString("00") + "'" + s_EorW.ToString("00") + "\"<br>" +
             " Alt " + ISS_orbit.Altitude.ToString("00.000") + "<br><br>" +
             "■Moon<br> " +

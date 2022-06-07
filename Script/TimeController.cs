@@ -548,53 +548,6 @@ public partial class TimeController : MonoBehaviour
         TimeSpan Span_EpochTime = E_SetTime - E_OutTime;
         DeltaEpochTime = Span_EpochTime.TotalDays;
 
-        //// 構造体型のインスタンス化
-        //Date E_date; //過去時間
-        //Date date; //経過時間用
-        //
-        ///* 1年を取得 */
-        ////年取得
-        //E_date.Year = E_year;
-        ////月取得
-        //E_date.Month = 1;
-        ////日取得
-        //E_date.Day = 1;
-        ////時間取得
-        //E_date.Hour = 0;
-        ////分取得
-        //E_date.Minute = 0;
-        ////秒取得
-        //E_date.Second = 0;
-        //
-        ////経過日数
-        //MotionTime date_Time = DiurnalMotion(E_date, E_day - 1);
-        //
-        ///*構造体変更*/
-        ////年取得
-        //date.Year = date_Time.Year;
-        ////月取得
-        //date.Month = date_Time.Month;
-        ////日取得
-        //date.Day = date_Time.Day;
-        ////時間取得
-        //date.Hour = date_Time.Hour;
-        ////分取得
-        //date.Minute = date_Time.Minute;
-        ////秒取得
-        //date.Second = date_Time.Second;
-        //
-        //double ETJD = GetJD(date);
-        //double SetJD = GetJD(SetTime);
-        //
-        ////Debug.Log("SetTime");
-        ////Debug.Log(SetTime.Year + "/" + SetTime.Month + "/" + SetTime.Day + " " + SetTime.Hour + ":" + SetTime.Minute + ":" + SetTime.Second);
-        ////Debug.Log("date");
-        ////Debug.Log(date.Year + "/" + date.Month + "/" + date.Day + " " + date.Hour + ":" + date.Minute + ":" + date.Second);
-        //
-        ////経過JD
-        //DeltaEpochTime = SetJD - ETJD;
-
-
         return DeltaEpochTime;
     
     
@@ -614,7 +567,7 @@ public partial class TimeController : MonoBehaviour
         Longitude = (float)rot2Dir(Mathf.Asin(ISS_Pos.z / Mathf.Sqrt(SubLongitude)));
 
         //-緯度
-        Latitude = (float)rot2Dir(Mathf.Atan2(ISS_Pos.x, ISS_Pos.y));
+        Latitude = (float)rot2Dir(Mathf.Atan2(ISS_Pos.y, ISS_Pos.x));
 
         Pos.E = (double)Latitude;
         Pos.N = (double)Longitude;
@@ -895,6 +848,7 @@ public partial class TimeController : MonoBehaviour
 
         //観測赤径角度
         double theta_g = ((360d / 24d) * GetGst(date));
+        //double theta_g = GetGst(date);
         //PDFマスター
         //theta_g = 261.678884;
 

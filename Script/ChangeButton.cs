@@ -1,7 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.UI;
+using static ChangeButton;
+
 
 public class ChangeButton : MonoBehaviour
 {/*=== 表示変更ボタン ===*/
@@ -14,21 +15,18 @@ public class ChangeButton : MonoBehaviour
     private Color32 Off_Color = new Color32(0, 0, 100, 255);
 
     //管理フラグ
-    private bool ChangeFlag { get; set; }
+    public bool ChangeFlag;// { get; set; }
     //表示切替オブジェクト
-    public GameObject Change_obj;  
+    public GameObject[] Change_obj;  
     
     //ボタンオブジェクト
     public Button Button_obj;
-    
+
     void Start()
     {/* スタート関数 */
     
         //表示の初期化
-        ChangeFlag = true;
-
-        //アクティブ変更
-        Change_obj.SetActive(ChangeFlag);
+        //ChangeFlag = true;
 
         //ボタンの色変更
         ChangeButtonCollar(ChangeFlag);
@@ -40,9 +38,6 @@ public class ChangeButton : MonoBehaviour
     
         ChangeFlag = !ChangeFlag;
     
-        //アクティブ変更
-        Change_obj.SetActive(ChangeFlag);
-    
         //ボタンの色変更
         ChangeButtonCollar(ChangeFlag);
     
@@ -50,6 +45,17 @@ public class ChangeButton : MonoBehaviour
     
     private void ChangeButtonCollar(bool CollarFlag)
     {/*=== ボタンの色変更 ===*/
+
+        if (!(Change_obj.Length == null))
+        {//オブジェクト変更
+
+            for (int Change_Count = 0; Change_Count < Change_obj.Length; Change_Count++)
+            {
+                //アクティブ変更
+                Change_obj[Change_Count].SetActive(ChangeFlag);
+            }
+
+        }//END_オブジェクト変更
 
         if (CollarFlag == true)
         {//ONカラーに変更
@@ -66,3 +72,4 @@ public class ChangeButton : MonoBehaviour
     }/*=== ボタンの色変更 ===*/
 
 }/*=== END_表示変更ボタン ===*/
+
